@@ -37,7 +37,12 @@ export default function LoginPage() {
         goGame();
       }
     } catch (e: any) {
-      setError(e.response?.data?.error || 'เกิดข้อผิดพลาด');
+      const msg =
+        e.response?.data?.error ||
+        (e.code === 'ERR_NETWORK' || !e.response
+          ? 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ตรวจว่า backend รันที่ :3001'
+          : 'เกิดข้อผิดพลาด');
+      setError(msg);
     }
   };
 

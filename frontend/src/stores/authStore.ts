@@ -8,12 +8,14 @@ interface AuthState {
   loginStreak: number;
   morningBonus: any | null;
   loading: boolean;
+  hydrated: boolean;
   setAuth: (token: string, user: any, extra?: any) => void;
   logout: () => void;
   fetchMe: () => Promise<void>;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, displayName: string) => Promise<any>;
   loginGuest: (displayName?: string) => Promise<void>;
+  setHydrated: (v: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -24,6 +26,9 @@ export const useAuthStore = create<AuthState>()(
       loginStreak: 0,
       morningBonus: null,
       loading: false,
+      hydrated: false,
+
+      setHydrated: (v) => set({ hydrated: v }),
 
       setAuth: (token, user, extra) =>
         set({
@@ -33,15 +38,23 @@ export const useAuthStore = create<AuthState>()(
           morningBonus: extra?.morningBonus ?? null,
         }),
 
-      logout: () => set({ token: null, user: null, loginStreak: 0, morningBonus: null }),
+      logout: () => {
+        set({ token: null, user: null, loginStreak: 0, morningBonus: null });
+      },
 
       fetchMe: async () => {
         if (!get().token) return;
         try {
           const { data } = await api.get('/api/auth/me');
-          set({ user: data.user, loginStreak: data.loginStreak || data.user?.loginStreak || 0 });
-        } catch {
-          set({ token: null, user: null });
+          set({
+            user: data.user,
+            loginStreak: data.loginStreak || data.user?.loginStreak || 0,
+          });
+        } catch (e: any) {
+          // ล้าง token เฉพาะตอน 401 เท่านั้น — อย่าเตะออกเพราะเน็ตหลุด
+          if (e?.response?.status === 401) {
+            set({ token: null, user: null });
+          }
         }
       },
 
@@ -97,6 +110,12 @@ export const useAuthStore = create<AuthState>()(
         }
       },
     }),
-    { name: 'gvl-auth', partialize: (s) => ({ token: s.token }) }
+    {
+      name: 'gvl-auth',
+      partialize: (s) => ({ token: s.token }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
+    }
   )
 );

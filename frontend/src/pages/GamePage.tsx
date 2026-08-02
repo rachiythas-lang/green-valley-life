@@ -10,12 +10,14 @@ export default function GamePage() {
   const user = useAuthStore((s) => s.user);
   const loginStreak = useAuthStore((s) => s.loginStreak);
   const morningBonus = useAuthStore((s) => s.morningBonus);
+  const logout = useAuthStore((s) => s.logout);
   const [farm, setFarm] = useState<any>(null);
   const [world, setWorld] = useState<any>(null);
   const [inventory, setInventory] = useState<any[]>([]);
   const [tool, setTool] = useState<'hoe' | 'seed' | 'water' | 'hand'>('hoe');
   const [seed, setSeed] = useState('tomato');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [toast, setToast] = useState('');
   const [banner, setBanner] = useState('');
 
@@ -33,34 +35,61 @@ export default function GamePage() {
     }
   }, []);
 
-  useEffect(() => {
-    (async () => {
+  const loadGame = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const meRes = await api.get('/api/auth/me');
+      setInventory(meRes.data.user?.inventory || []);
+
+      // world อาจ fail — ใช้ค่า default
+      let worldData: any = {
+        weather: 'sunny',
+        timeOfDay: 'morning',
+        npcs: [
+          { id: 'mint', name: 'มิ้นท์', x: 620, y: 280, lines: ['สวัสดีจ้า!'] },
+          { id: 'uncle_fish', name: 'ลุงปลา', x: 980, y: 460, lines: ['ลองตกปลาสิ'] },
+        ],
+      };
       try {
-        const [farmRes, worldRes, meRes] = await Promise.all([
-          api.get('/api/farm'),
-          api.get('/api/world/state'),
-          api.get('/api/auth/me'),
-        ]);
-        // ensure animals exist
-        try { await api.get('/api/animal'); } catch {}
-        const farm2 = await api.get('/api/farm');
-        setFarm(farm2.data.farm);
-        setWorld(worldRes.data);
-        setInventory(meRes.data.user.inventory || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+        const w = await api.get('/api/world/state');
+        worldData = w.data;
+      } catch {}
+
+      try {
+        await api.get('/api/animal');
+      } catch {}
+
+      const farmRes = await api.get('/api/farm');
+      if (!farmRes.data?.farm) {
+        throw new Error('ไม่พบข้อมูลฟาร์ม');
       }
-    })();
+      setFarm(farmRes.data.farm);
+      setWorld(worldData);
+    } catch (e: any) {
+      console.error(e);
+      const msg =
+        e.response?.data?.error ||
+        (e.code === 'ERR_NETWORK' || !e.response
+          ? 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (backend ต้องรันที่พอร์ต 3001)'
+          : e.message || 'โหลดเกมไม่สำเร็จ');
+      setLoadError(msg);
+      setFarm(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadGame();
+  }, [loadGame]);
 
   const refresh = async () => {
     try {
       const me = await api.get('/api/auth/me');
-      setInventory(me.data.user.inventory || []);
+      setInventory(me.data.user?.inventory || []);
       const f = await api.get('/api/farm');
-      setFarm(f.data.farm);
+      if (f.data?.farm) setFarm(f.data.farm);
     } catch {}
   };
 
@@ -81,10 +110,14 @@ export default function GamePage() {
           }
         }
         if (res?.data?.plot) {
-          setFarm((prev: any) => ({
-            ...prev,
-            plots: prev.plots.map((p: any) => (p.x === x && p.y === y ? res.data.plot : p)),
-          }));
+          setFarm((prev: any) =>
+            prev
+              ? {
+                  ...prev,
+                  plots: prev.plots.map((p: any) => (p.x === x && p.y === y ? res.data.plot : p)),
+                }
+              : prev
+          );
           const scene = gameRef.current?.scene.getScene('FarmScene') as any;
           scene?.updatePlot?.(res.data.plot);
         }
@@ -96,7 +129,7 @@ export default function GamePage() {
   );
 
   const handleNpcClick = useCallback(async (id: string) => {
-    if (id === 'mint') showToast('คลิกร้าน 🏪 ด้านซ้ายเพื่อซื้อของ');
+    if (id === 'mint') showToast('เปิดร้าน 🏪 ด้านซ้ายเพื่อซื้อของ');
     if (id === 'uncle_fish') showToast('คลิกบ่อน้ำเพื่อตกปลา 🎣');
   }, []);
 
@@ -137,7 +170,7 @@ export default function GamePage() {
       game.destroy(true);
       gameRef.current = null;
     };
-  }, [farm?.id, world]);
+  }, [farm?.id, !!world]);
 
   useEffect(() => {
     if (gameRef.current) {
@@ -154,6 +187,37 @@ export default function GamePage() {
         <div className="panel-cream px-8 py-6 text-center">
           <div className="text-4xl mb-2 animate-bounce">🏡</div>
           <p className="font-cute font-extrabold text-pixel-dark">กำลังโหลดหมู่บ้าน...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !farm) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-pixel-grass p-4">
+        <div className="panel-cream px-6 py-6 text-center max-w-sm w-full">
+          <div className="text-4xl mb-2">⚠️</div>
+          <p className="font-cute font-extrabold text-pixel-dark mb-2">เข้าเกมไม่สำเร็จ</p>
+          <p className="font-cute text-xs text-pixel-woodDark mb-4 leading-relaxed">{loadError || 'ไม่พบฟาร์ม'}</p>
+          <div className="flex flex-col gap-2">
+            <button onClick={loadGame} className="btn-pixel-green w-full py-2.5 text-sm">
+              ลองใหม่
+            </button>
+            <button
+              onClick={() => {
+                logout();
+                window.location.href = '/login';
+              }}
+              className="btn-pixel-cream w-full py-2.5 text-sm"
+            >
+              กลับหน้าล็อกอิน
+            </button>
+          </div>
+          <p className="text-[10px] text-pixel-woodDark/70 mt-4 font-cute leading-relaxed">
+            ตรวจว่า backend รัน: <code>cd backend && npm run dev</code>
+            <br />
+            และ DB พร้อม: <code>npx prisma db push</code>
+          </p>
         </div>
       </div>
     );

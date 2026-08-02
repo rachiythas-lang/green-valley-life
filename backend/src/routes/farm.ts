@@ -16,11 +16,20 @@ const CROP_DATA: Record<string, { growthMs: number; stages: number; sellPrice: n
 };
 
 router.get('/', async (req: AuthRequest, res) => {
-  const farm = await prisma.farm.findUnique({
-    where: { userId: req.userId },
-    include: { plots: true, animals: true, decorations: true },
-  });
-  if (!farm) return res.status(404).json({ error: 'Farm not found' });
+  let farm: any = null;
+  try {
+    farm = await prisma.farm.findUnique({
+      where: { userId: req.userId },
+      include: { plots: true, animals: true, decorations: true },
+    });
+  } catch {
+    farm = await prisma.farm.findUnique({
+      where: { userId: req.userId },
+      include: { plots: true, animals: true },
+    });
+    if (farm) farm.decorations = [];
+  }
+  if (!farm) return res.status(404).json({ error: 'Farm not found — ลองสมัครใหม่หรือรัน prisma db push' });
 
   const now = Date.now();
   for (const plot of farm.plots) {
