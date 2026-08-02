@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Green Valley Life</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:system-ui,sans-serif;background:#7CB342}
+#app{height:100%;width:100%;position:relative}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+/* LOGIN */
+#login{align-items:center;justify-content:center;background:linear-gradient(180deg,#81D4FA 0 40%,#8BC34A 40% 100%)}
+.card{background:#FFF8E7;border:4px solid #5D4037;border-radius:12px;padding:24px;width:min(92vw,360px);box-shadow:0 8px 0 #3E2723}
+.card h1{text-align:center;font-size:22px;color:#33691E;margin-bottom:4px}
+.card .sub{text-align:center;color:#6D4C41;font-size:13px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tabs button{flex:1;padding:8px;border:3px solid #5D4037;background:#EFEBE9;font-weight:700;cursor:pointer;border-radius:6px;font-size:13px}
+.tabs button.on{background:#AED581;color:#1B5E20}
+.card input{width:100%;padding:10px;margin:6px 0;border:3px solid #5D4037;border-radius:6px;font-size:14px}
+.card .btn{width:100%;padding:12px;margin-top:10px;border:3px solid #2E7D32;background:#66BB6A;color:#fff;font-weight:800;font-size:15px;border-radius:8px;cursor:pointer}
+.card .btn:active{transform:translateY(2px)}
+.card .btn.guest{background:#FFB74D;border-color:#E65100;color:#3E2723}
+.err{color:#C62828;font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+/* GAME */
+#game{background:#8BC34A}
+#hud{position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;padding:8px;display:flex;justify-content:space-between;gap:8px}
+#hud>*{pointer-events:auto}
+.bar{background:#FFF8E7;border:3px solid #5D4037;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:700;color:#3E2723;display:flex;gap:10px;align-items:center}
+.tools{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:6px;background:#FFF8E7;border:3px solid #5D4037;border-radius:12px;padding:8px}
+.tools button{width:48px;height:48px;border:3px solid #5D4037;border-radius:8px;background:#EFEBE9;font-size:22px;cursor:pointer}
+.tools button.on{background:#AED581;border-color:#2E7D32}
+#toast{position:absolute;top:56px;left:50%;transform:translateX(-50%);z-index:20;background:#3E2723;color:#FFF8E7;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;display:none}
+#canvas-wrap{position:absolute;inset:0}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+.side{position:absolute;left:8px;top:56px;z-index:10;display:flex;flex-direction:column;gap:6px}
+.side button{pointer-events:auto;width:44px;height:44px;border:3px solid #5D4037;border-radius:8px;background:#FFF8E7;font-size:18px;cursor:pointer}
+.panel{position:absolute;right:8px;top:56px;bottom:80px;width:min(280px,90vw);background:#FFF8E7;border:4px solid #5D4037;border-radius:12px;z-index:15;padding:12px;display:none;overflow:auto}
+.panel.on{display:block}
+.panel h3{margin-bottom:8px;color:#33691E}
+.panel .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #D7CCC8;font-size:13px}
+.panel button{padding:6px 10px;border:2px solid #5D4037;border-radius:6px;background:#AED581;font-weight:700;cursor:pointer;font-size:12px}
+.panel .close{float:right;background:#FFCDD2}
+/* ADMIN */
+#admin{background:#2E7D32;padding:16px;overflow:auto}
+#admin .card{max-width:640px;margin:0 auto 16px;width:100%}
+#admin table{width:100%;font-size:12px;border-collapse:collapse}
+#admin td,#admin th{border:1px solid #D7CCC8;padding:6px;text-align:left}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- LOGIN -->
+  <div id="login" class="screen on">
+    <div class="card">
+      <div style="text-align:center;font-size:40px;margin-bottom:4px">🏡</div>
+      <h1>Green Valley Life</h1>
+      <p class="sub">สร้างหมู่บ้านของคุณ!</p>
+      <div class="tabs">
+        <button type="button" class="on" data-tab="login">เข้าสู่ระบบ</button>
+        <button type="button" data-tab="register">สมัคร</button>
+        <button type="button" data-tab="guest">Guest</button>
+      </div>
+      <div id="f-login">
+        <input id="email" type="email" placeholder="อีเมล" value="rachiytahs@gmail.com"/>
+        <input id="pass" type="password" placeholder="รหัสผ่าน" value="1369900"/>
+      </div>
+      <div id="f-register" style="display:none">
+        <input id="reg-name" placeholder="ชื่อในเกม"/>
+        <input id="reg-email" type="email" placeholder="อีเมล"/>
+        <input id="reg-pass" type="password" placeholder="รหัสผ่าน (6+)"/>
+      </div>
+      <div id="f-guest" style="display:none">
+        <input id="guest-name" placeholder="ชื่อ (ไม่บังคับ)"/>
+      </div>
+      <button class="btn" id="btn-go">เข้าสู่ระบบ</button>
+      <button class="btn guest" id="btn-guest" style="display:none">เล่นแบบ Guest</button>
+      <p class="err" id="err"></p>
+      <p style="font-size:10px;color:#8D6E63;text-align:center;margin-top:10px">แอดมิน: rachiytahs@gmail.com / 1369900</p>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="screen">
+    <div id="canvas-wrap"><canvas id="c"></canvas></div>
+    <div id="hud">
+      <div class="bar">
+        <span id="name">—</span>
+        <span>💰 <b id="coins">0</b></span>
+        <span>⚡ <b id="energy">100</b></span>
+        <span>Lv.<b id="level">1</b></span>
+      </div>
+      <div class="bar" id="admin-btn" style="display:none;cursor:pointer" onclick="showAdmin()">🛠️ แอดมิน</div>
+    </div>
+    <div class="side">
+      <button title="ร้าน" onclick="togglePanel('shop')">🏪</button>
+      <button title="ของขวัญ" onclick="togglePanel('daily')">🎁</button>
+      <button title="กระเป๋า" onclick="togglePanel('bag')">🎒</button>
+      <button title="ออก" onclick="logout()">🚪</button>
+    </div>
+    <div id="panel-shop" class="panel">
+      <button class="close" onclick="closePanels()">✕</button>
+      <h3>🏪 ร้านค้า</h3>
+      <div id="shop-list"></div>
+    </div>
+    <div id="panel-daily" class="panel">
+      <button class="close" onclick="closePanels()">✕</button>
+      <h3>🎁 ของขวัญรายวัน</h3>
+      <div id="daily-list"></div>
+      <button style="margin-top:8px;width:100%" onclick="claimDaily()">รับรางวัลวันนี้</button>
+    </div>
+    <div id="panel-bag" class="panel">
+      <button class="close" onclick="closePanels()">✕</button>
+      <h3>🎒 กระเป๋า</h3>
+      <div id="bag-list"></div>
+    </div>
+    <div class="tools">
+      <button class="on" data-tool="hoe" title="ไถ">🪓</button>
+      <button data-tool="seed" title="ปลูก">🌱</button>
+      <button data-tool="water" title="รดน้ำ">💧</button>
+      <button data-tool="hand" title="เก็บ">✋</button>
+    </div>
+    <div id="toast"></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="admin" class="screen">
+    <div class="card">
+      <h1>🛠️ Admin</h1>
+      <p class="sub" id="admin-who"></p>
+      <button class="btn" onclick="showGame()" style="margin-bottom:12px">กลับเกม</button>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div class="bar" style="flex:1;justify-content:center">ผู้เล่น <b id="st-players">0</b></div>
+        <div class="bar" style="flex:1;justify-content:center">แปลง <b id="st-plots">0</b></div>
+      </div>
+      <h3 style="margin:8px 0">ประกาศ</h3>
+      <input id="ann" placeholder="ข้อความ..." style="width:100%;padding:8px;border:3px solid #5D4037;border-radius:6px"/>
+      <button class="btn" style="margin-top:6px" onclick="doAnnounce()">ส่งประกาศ</button>
+      <h3 style="margin:16px 0 8px">ผู้เล่น</h3>
+      <div id="player-table"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STORAGE ==========
+const KEY = 'gvl_v2';
+function loadDB() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || { users: [], session: null }; }
+  catch { return { users: [], session: null }; }
+}
+function saveDB(db) { localStorage.setItem(KEY, JSON.stringify(db)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function hash(pw) {
+  let h = 0; for (let i = 0; i < pw.length; i++) h = ((h << 5) - h) + pw.charCodeAt(i) | 0;
+  return 'h' + h;
+}
+
+function ensureAdmin(db) {
+  const email = 'rachiytahs@gmail.com';
+  let u = db.users.find(x => x.email === email);
+  if (!u) {
+    u = makeUser('Admin', email, hash('1369900'), 'admin');
+    db.users.push(u);
+  } else {
+    u.passwordHash = hash('1369900');
+    u.role = 'admin';
+    u.isBanned = false;
+  }
+  saveDB(db);
+  return u;
+}
+
+function makePlots() {
+  const a = [];
+  for (let x = 0; x < 6; x++) for (let y = 0; y < 4; y++)
+    a.push({ x, y, state: 'empty', crop: null, plantedAt: 0, stage: 0 });
+  return a;
+}
+
+function makeUser(name, email, passwordHash, role) {
+  return {
+    id: uid(), email, passwordHash, displayName: name, role: role || 'player', isBanned: false,
+    loginStreak: 1, dailyDay: 0, lastDaily: null,
+    character: { level: 1, energy: 100, exp: 0 },
+    coins: role === 'admin' ? 10000 : 500,
+    inv: { seed_tomato: 10, seed_carrot: 10 },
+    plots: makePlots(),
+    animals: [{ id: uid(), type: 'chicken', name: 'เจี๊ยบ', ready: true }],
+    announcements: [],
+  };
+}
+
+const CROPS = {
+  tomato: { grow: 25000, stages: 4, sell: 25, color: '#E53935' },
+  carrot: { grow: 18000, stages: 3, sell: 18, color: '#FB8C00' },
+  wheat: { grow: 30000, stages: 4, sell: 15, color: '#FDD835' },
+};
+
+let state = { user: null, tool: 'hoe', seed: 'tomato', panel: null };
+
+// ========== AUTH UI ==========
+let tab = 'login';
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.onclick = () => {
+    tab = b.dataset.tab;
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('f-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('f-register').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('f-guest').style.display = tab === 'guest' ? 'block' : 'none';
+    document.getElementById('btn-go').style.display = tab === 'guest' ? 'none' : 'block';
+    document.getElementById('btn-guest').style.display = tab === 'guest' ? 'block' : 'none';
+    document.getElementById('err').textContent = '';
+  };
+});
+
+document.getElementById('btn-go').onclick = () => {
+  const db = loadDB();
+  ensureAdmin(db);
+  const err = document.getElementById('err');
+  if (tab === 'login') {
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('pass').value;
+    const u = db.users.find(x => x.email === email && x.passwordHash === hash(pass));
+    if (!u) { err.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'; return; }
+    if (u.isBanned) { err.textContent = 'บัญชีถูกแบน'; return; }
+    u.loginStreak = (u.loginStreak || 0) + 1;
+    db.session = u.id; saveDB(db);
+    enterGame(u);
+  } else {
+    const name = document.getElementById('reg-name').value.trim() || 'ชาวนา';
+    const email = document.getElementById('reg-email').value.trim();
+    const pass = document.getElementById('reg-pass').value;
+    if (!email || pass.length < 6) { err.textContent = 'กรอกอีเมลและรหัส 6+ ตัว'; return; }
+    if (db.users.find(x => x.email === email)) { err.textContent = 'อีเมลนี้ถูกใช้แล้ว'; return; }
+    const u = makeUser(name, email, hash(pass), 'player');
+    db.users.push(u); db.session = u.id; saveDB(db);
+    enterGame(u);
+  }
+};
+document.getElementById('btn-guest').onclick = () => {
+  const db = loadDB(); ensureAdmin(db);
+  const name = document.getElementById('guest-name').value.trim() || 'ชาวนา' + Math.floor(Math.random()*9000+1000);
+  const u = makeUser(name, null, null, 'player');
+  db.users.push(u); db.session = u.id; saveDB(db);
+  enterGame(u);
+};
+
+function logout() {
+  const db = loadDB(); db.session = null; saveDB(db);
+  state.user = null;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById('login').classList.add('on');
+}
+
+function enterGame(u) {
+  state.user = u;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  if (u.role === 'admin') {
+    // เข้าเกมก่อน แล้วมีปุ่มแอดมิน
+  }
+  document.getElementById('game').classList.add('on');
+  document.getElementById('admin-btn').style.display = u.role === 'admin' ? 'block' : 'none';
+  refreshHUD();
+  draw();
+  toast('ยินดีต้อนรับ ' + u.displayName + '!');
+}
+
+function saveUser() {
+  const db = loadDB();
+  const i = db.users.findIndex(x => x.id === state.user.id);
+  if (i >= 0) db.users[i] = state.user;
+  saveDB(db);
+}
+
+function refreshHUD() {
+  const u = state.user; if (!u) return;
+  document.getElementById('name').textContent = u.displayName;
+  document.getElementById('coins').textContent = u.coins;
+  document.getElementById('energy').textContent = u.character.energy;
+  document.getElementById('level').textContent = u.character.level;
+}
+
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 2200);
+}
+
+// tools
+document.querySelectorAll('.tools button').forEach(b => {
+  b.onclick = () => {
+    state.tool = b.dataset.tool;
+    document.querySelectorAll('.tools button').forEach(x => x.classList.toggle('on', x === b));
+  };
+});
+
+// panels
+function togglePanel(id) {
+  const el = document.getElementById('panel-' + id);
+  const open = el.classList.contains('on');
+  closePanels();
+  if (!open) {
+    el.classList.add('on');
+    if (id === 'shop') renderShop();
+    if (id === 'bag') renderBag();
+    if (id === 'daily') renderDaily();
+  }
+}
+function closePanels() {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+}
+
+function renderShop() {
+  const items = [
+    { id: 'seed_tomato', name: 'เมล็ดมะเขือ', buy: 12 },
+    { id: 'seed_carrot', name: 'เมล็ดแครอท', buy: 10 },
+    { id: 'seed_wheat', name: 'เมล็ดข้าว', buy: 8 },
+  ];
+  document.getElementById('shop-list').innerHTML = items.map(it =>
+    `<div class="row"><span>${it.name} (${it.buy}💰)</span><button onclick="buy('${it.id}',${it.buy})">ซื้อ</button></div>`
+  ).join('') + `<div class="row"><span>ขายพืชในกระเป๋า</span><button onclick="sellAll()">ขายทั้งหมด</button></div>`;
+}
+function buy(id, price) {
+  if (state.user.coins < price) return toast('เหรียญไม่พอ');
+  state.user.coins -= price;
+  state.user.inv[id] = (state.user.inv[id] || 0) + 1;
+  saveUser(); refreshHUD(); toast('ซื้อแล้ว'); renderShop();
+}
+function sellAll() {
+  const prices = { crop_tomato: 25, crop_carrot: 18, crop_wheat: 15, egg: 20 };
+  let earned = 0;
+  for (const [k, p] of Object.entries(prices)) {
+    const q = state.user.inv[k] || 0;
+    if (q > 0) { earned += q * p; state.user.inv[k] = 0; }
+  }
+  state.user.coins += earned; saveUser(); refreshHUD();
+  toast(earned ? 'ขายได้ ' + earned + ' เหรียญ' : 'ไม่มีของขาย'); renderBag();
+}
+function renderBag() {
+  const inv = state.user.inv;
+  const rows = Object.entries(inv).filter(([,q]) => q > 0).map(([k,q]) =>
+    `<div class="row"><span>${k}</span><b>×${q}</b></div>`
+  );
+  document.getElementById('bag-list').innerHTML = rows.length ? rows.join('') : '<p style="font-size:13px">ว่างเปล่า</p>';
+}
+function renderDaily() {
+  const days = ['50 เหรียญ','เมล็ด x5','100 เหรียญ','แครอท x5','ม้านั่ง','150 เหรียญ','น้ำพุ +200'];
+  document.getElementById('daily-list').innerHTML = days.map((d,i) =>
+    `<div class="row"><span>วัน ${i+1}</span><span>${d} ${state.user.dailyDay > i ? '✅' : ''}</span></div>`
+  ).join('');
+}
+function claimDaily() {
+  const today = new Date().toDateString();
+  if (state.user.lastDaily === today) return toast('รับแล้ววันนี้');
+  const next = (state.user.dailyDay || 0) >= 7 ? 1 : (state.user.dailyDay || 0) + 1;
+  const rewards = {1:['coin',50],2:['seed_tomato',5],3:['coin',100],4:['seed_carrot',5],5:['decor',1],6:['coin',150],7:['coin',200]};
+  const [item, qty] = rewards[next];
+  if (item === 'coin') state.user.coins += qty;
+  else state.user.inv[item] = (state.user.inv[item] || 0) + qty;
+  state.user.dailyDay = next;
+  state.user.lastDaily = today;
+  saveUser(); refreshHUD(); toast('รับรางวัลวัน ' + next + '!'); renderDaily();
+}
+
+// ========== CANVAS FARM ==========
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const TILE = 48;
+const OX = 80, OY = 120;
+
+function resize() {
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function tickGrowth() {
+  if (!state.user) return;
+  const now = Date.now();
+  for (const p of state.user.plots) {
+    if ((p.state === 'planted' || p.state === 'growing') && p.crop && p.plantedAt) {
+      const c = CROPS[p.crop]; if (!c) continue;
+      const st = Math.min(c.stages, Math.floor((now - p.plantedAt) / c.grow * c.stages));
+      p.stage = st;
+      p.state = st >= c.stages ? 'ready' : 'growing';
+    }
+  }
+}
+
+function draw() {
+  if (!state.user) return;
+  tickGrowth();
+  const w = canvas.width, h = canvas.height;
+  ctx.imageSmoothingEnabled = false;
+  // sky
+  ctx.fillStyle = '#81D4FA';
+  ctx.fillRect(0, 0, w, h * 0.35);
+  // ground
+  ctx.fillStyle = '#8BC34A';
+  ctx.fillRect(0, h * 0.35, w, h);
+  // path
+  ctx.fillStyle = '#D7CCC8';
+  ctx.fillRect(OX - 20, OY + 4 * TILE + 20, 6 * TILE + 40, 24);
+  // house
+  ctx.fillStyle = '#A1887F';
+  ctx.fillRect(OX + 6 * TILE + 40, OY - 20, 80, 70);
+  ctx.fillStyle = '#E53935';
+  ctx.beginPath();
+  ctx.moveTo(OX + 6 * TILE + 30, OY - 20);
+  ctx.lineTo(OX + 6 * TILE + 80, OY - 50);
+  ctx.lineTo(OX + 6 * TILE + 130, OY - 20);
+  ctx.fill();
+  // trees
+  [[20, OY + 40],[w - 40, OY + 60],[OX + 100, OY - 40]].forEach(([x,y]) => {
+    ctx.fillStyle = '#5D4037'; ctx.fillRect(x + 10, y + 30, 12, 28);
+    ctx.fillStyle = '#2E7D32'; ctx.beginPath(); ctx.arc(x + 16, y + 20, 22, 0, Math.PI * 2); ctx.fill();
+  });
+  // pond
+  ctx.fillStyle = '#29B6F6';
+  ctx.beginPath();
+  ctx.ellipse(OX + 3 * TILE, OY + 5 * TILE + 60, 70, 30, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.fillText('🎣 คลิกบ่อตกปลา', OX + 3 * TILE - 40, OY + 5 * TILE + 64);
+  // chicken
+  ctx.font = '28px serif';
+  ctx.fillText(state.user.animals[0]?.ready ? '🐔✨' : '🐔', OX - 40, OY + 3 * TILE);
+  // plots
+  for (const p of state.user.plots) {
+    const x = OX + p.x * TILE, y = OY + p.y * TILE;
+    if (p.state === 'empty') ctx.fillStyle = '#9CCC65';
+    else if (p.state === 'tilled') ctx.fillStyle = '#8D6E63';
+    else if (p.state === 'ready') ctx.fillStyle = '#FFEE58';
+    else ctx.fillStyle = '#A1887F';
+    ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+    ctx.strokeStyle = '#5D4037';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + 2, y + 2, TILE - 4, TILE - 4);
+    if (p.crop && p.state !== 'tilled' && p.state !== 'empty') {
+      const c = CROPS[p.crop];
+      const size = 8 + p.stage * 6;
+      ctx.fillStyle = c ? c.color : '#4CAF50';
+      ctx.beginPath();
+      ctx.arc(x + TILE / 2, y + TILE / 2 + 4, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+      if (p.state === 'ready') {
+        ctx.fillStyle = '#1B5E20';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('พร้อม', x + 8, y + 14);
+      }
+    }
+  }
+  // NPC
+  ctx.font = '28px serif';
+  ctx.fillText('👩', OX + 5 * TILE + 20, OY + TILE);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#3E2723';
+  ctx.fillText('มิ้นท์', OX + 5 * TILE + 18, OY + TILE + 12);
+}
+
+canvas.addEventListener('click', (e) => {
+  if (!state.user) return;
+  const r = canvas.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  // pond?
+  const pondX = OX + 3 * TILE, pondY = OY + 5 * TILE + 60;
+  if (Math.hypot(mx - pondX, my - pondY) < 70) {
+    if (state.user.character.energy < 5) return toast('พลังงานไม่พอ');
+    state.user.character.energy -= 5;
+    if (Math.random() > 0.3) {
+      state.user.inv.fish_carp = (state.user.inv.fish_carp || 0) + 1;
+      toast('จับปลาได้! 🐟');
+    } else toast('ไม่ได้ปลา...');
+    saveUser(); refreshHUD(); draw();
+    return;
+  }
+  // chicken?
+  if (mx < OX - 10 && my > OY + 2 * TILE && my < OY + 4 * TILE) {
+    const a = state.user.animals[0];
+    if (a && a.ready) {
+      a.ready = false;
+      state.user.inv.egg = (state.user.inv.egg || 0) + 1;
+      toast('เก็บไข่! 🥚');
+      setTimeout(() => { a.ready = true; saveUser(); draw(); }, 60000);
+      saveUser(); refreshHUD(); draw();
+    } else toast('ไก่ยังไม่วางไข่');
+    return;
+  }
+  // plot
+  const px = Math.floor((mx - OX) / TILE);
+  const py = Math.floor((my - OY) / TILE);
+  if (px < 0 || py < 0 || px > 5 || py > 3) return;
+  const plot = state.user.plots.find(p => p.x === px && p.y === py);
+  if (!plot) return;
+  if (state.tool === 'hoe') {
+    if (plot.state === 'empty' || plot.state === 'dead') {
+      plot.state = 'tilled'; plot.crop = null; plot.stage = 0;
+      toast('ไถแล้ว');
+    } else toast('ไถไม่ได้');
+  } else if (state.tool === 'seed') {
+    if (plot.state !== 'tilled') return toast('ต้องไถก่อน');
+    const key = 'seed_' + state.seed;
+    if (!(state.user.inv[key] > 0)) return toast('เมล็ดไม่พอ');
+    state.user.inv[key]--;
+    plot.state = 'planted'; plot.crop = state.seed; plot.plantedAt = Date.now(); plot.stage = 0;
+    toast('ปลูก ' + state.seed);
+  } else if (state.tool === 'water') {
+    if (plot.state === 'planted' || plot.state === 'growing') toast('รดน้ำแล้ว 💧');
+    else toast('รดน้ำไม่ได้');
+  } else if (state.tool === 'hand') {
+    if (plot.state !== 'ready') return toast('ยังไม่พร้อมเก็บ');
+    const q = 1 + Math.floor(Math.random() * 2);
+    const key = 'crop_' + plot.crop;
+    state.user.inv[key] = (state.user.inv[key] || 0) + q;
+    plot.state = 'empty'; plot.crop = null; plot.stage = 0; plot.plantedAt = 0;
+    toast('เก็บ +' + q);
+  }
+  saveUser(); refreshHUD(); draw();
+});
+
+// ADMIN
+function showAdmin() {
+  if (state.user?.role !== 'admin') return;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById('admin').classList.add('on');
+  document.getElementById('admin-who').textContent = state.user.email;
+  const db = loadDB();
+  document.getElementById('st-players').textContent = db.users.length;
+  document.getElementById('st-plots').textContent = db.users.reduce((s,u) => s + (u.plots?.length || 0), 0);
+  document.getElementById('player-table').innerHTML = '<table><tr><th>ชื่อ</th><th>อีเมล</th><th>role</th><th></th></tr>' +
+    db.users.map(u => `<tr>
+      <td>${u.displayName}${u.isBanned?' 🚫':''}</td>
+      <td>${u.email||'-'}</td>
+      <td>${u.role}</td>
+      <td>${u.role==='admin'?'':`<button onclick="ban('${u.id}',${!u.isBanned})">${u.isBanned?'ปลดแบน':'แบน'}</button>
+      <button onclick="giveCoins('${u.id}')">+100💰</button>`}</td>
+    </tr>`).join('') + '</table>';
+}
+function showGame() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.getElementById('game').classList.add('on');
+  resize();
+}
+function ban(id, ban) {
+  const db = loadDB();
+  const u = db.users.find(x => x.id === id);
+  if (u && u.role !== 'admin') { u.isBanned = ban; saveDB(db); showAdmin(); }
+}
+function giveCoins(id) {
+  const db = loadDB();
+  const u = db.users.find(x => x.id === id);
+  if (u) { u.coins += 100; saveDB(db); toast('ให้ 100 เหรียญ'); showAdmin(); }
+}
+function doAnnounce() {
+  const msg = document.getElementById('ann').value.trim();
+  if (!msg) return;
+  toast('ประกาศ: ' + msg);
+  document.getElementById('ann').value = '';
+}
+
+// boot
+(function init() {
+  const db = loadDB();
+  ensureAdmin(db);
+  resize();
+  setInterval(() => { if (state.user) draw(); }, 1000);
+  if (db.session) {
+    const u = db.users.find(x => x.id === db.session);
+    if (u && !u.isBanned) enterGame(u);
+  }
+})();
+</script>
+</body>
+</html>
