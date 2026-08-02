@@ -4,32 +4,57 @@
 
 * {
   -webkit-tap-highlight-color: transparent;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
-  padding: 0;
   overflow: hidden;
   font-family: 'Nunito', system-ui, sans-serif;
-  background: linear-gradient(160deg, #E8F5E9 0%, #B3E5FC 45%, #FFF9C4 100%);
+  background: #7CB342;
 }
 
-@layer components {
-  .glass {
-    @apply bg-white/75 backdrop-blur-glass border border-white/50 shadow-glass;
-  }
-  .glass-dark {
-    @apply bg-black/40 backdrop-blur-glass border border-white/10 shadow-glass;
-  }
-  .btn-primary {
-    @apply bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 px-6 rounded-2xl transition-all duration-200 active:scale-95 shadow-md;
-  }
-  .btn-secondary {
-    @apply bg-white/85 hover:bg-white text-primary-700 font-bold py-2.5 px-6 rounded-2xl transition-all duration-200 active:scale-95 border border-primary-200;
-  }
+/* ปุ่มสไตล์เกมพิกเซล */
+.btn-pixel {
+  @apply font-cute font-extrabold rounded-none border-4 border-pixel-woodDark
+    shadow-pixel active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
+    transition-none select-none;
 }
 
-/* soft scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-thumb { background: #A5D6A7; border-radius: 99px; }
+.btn-pixel-green {
+  @apply btn-pixel bg-pixel-green text-white hover:bg-pixel-grass;
+}
+
+.btn-pixel-cream {
+  @apply btn-pixel bg-pixel-cream text-pixel-woodDark hover:bg-white;
+}
+
+.btn-pixel-pink {
+  @apply btn-pixel bg-pixel-pink text-white hover:brightness-110;
+}
+
+/* แผงไม้แบบเกม */
+.panel-wood {
+  background: linear-gradient(180deg, #A1887F 0%, #8D6E63 40%, #6D4C41 100%);
+  border: 4px solid #4E342E;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), 4px 4px 0 #3E2723;
+}
+
+.panel-cream {
+  background: #FFF8E1;
+  border: 4px solid #5D4037;
+  box-shadow: 4px 4px 0 #3E2723;
+}
+
+.hud-bar {
+  background: linear-gradient(180deg, #FFE082 0%, #FFB300 100%);
+  border: 3px solid #5D4037;
+  box-shadow: 2px 2px 0 #3E2723;
+}
+
+.text-pixel-title {
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 3px 3px 0 #33691E;
+}

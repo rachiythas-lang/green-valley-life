@@ -1,20 +1,16 @@
 import { Router } from 'express';
 import { prisma } from '../index.js';
 import { AuthRequest } from '../middleware/auth.js';
-import { z } from 'zod';
+import { bumpQuest } from './quest.js';
 
 const router = Router();
 
-const ANIMAL_TYPES: Record<string, { product: string; feedCost: number; collectCooldownMs: number; buyPrice: number }> = {
-  chicken: { product: 'egg', feedCost: 5, collectCooldownMs: 30_000, buyPrice: 200 },
-  cow: { product: 'milk', feedCost: 15, collectCooldownMs: 60_000, buyPrice: 800 },
-  pig: { product: 'truffle', feedCost: 12, collectCooldownMs: 90_000, buyPrice: 600 },
-  sheep: { product: 'wool', feedCost: 10, collectCooldownMs: 120_000, buyPrice: 500 },
-  duck: { product: 'duck_egg', feedCost: 6, collectCooldownMs: 40_000, buyPrice: 250 },
-  rabbit: { product: 'rabbit_wool', feedCost: 4, collectCooldownMs: 50_000, buyPrice: 180 },
+const TYPES: Record<string, { product: string; price: number; label: string }> = {
+  chicken: { product: 'egg', price: 150, label: 'ไก่' },
+  cow: { product: 'milk', price: 500, label: 'วัว' },
+  duck: { product: 'egg', price: 180, label: 'เป็ด' },
 };
 
-// รายการสัตว์ในฟาร์ม
 router.get('/', async (req: AuthRequest, res) => {
   const farm = await prisma.farm.findUnique({
     where: { userId: req.userId },
@@ -22,147 +18,104 @@ router.get('/', async (req: AuthRequest, res) => {
   });
   if (!farm) return res.status(404).json({ error: 'Farm not found' });
 
-  // อัปเดต productReady ตามเวลา
-  const now = Date.now();
-  for (const animal of farm.animals) {
-    const conf = ANIMAL_TYPES[animal.type];
-    if (!conf) continue;
-    if (animal.lastCollectedAt) {
-      const elapsed = now - new Date(animal.lastCollectedAt).getTime();
-      if (elapsed >= conf.collectCooldownMs && !animal.productReady) {
-        await prisma.animal.update({
-          where: { id: animal.id },
-          data: { productReady: true },
-        });
-        animal.productReady = true;
-      }
-    } else if (!animal.productReady) {
-      // สัตว์ใหม่ให้พร้อมเก็บหลัง cooldown
-      await prisma.animal.update({
-        where: { id: animal.id },
-        data: { productReady: true },
-      });
-      animal.productReady = true;
-    }
+  // ถ้ายังไม่มีไก่ ให้ตัวเริ่ม 1 ตัว
+  if (farm.animals.length === 0) {
+    const a = await prisma.animal.create({
+      data: {
+        farmId: farm.id,
+        type: 'chicken',
+        name: 'เจี๊ยบ',
+        posX: 220,
+        posY: 540,
+        productReady: true,
+      },
+    });
+    farm.animals.push(a);
   }
 
-  res.json({ animals: farm.animals, catalog: ANIMAL_TYPES });
+  res.json({ animals: farm.animals, catalog: TYPES });
 });
 
-// ซื้อสัตว์
 router.post('/buy', async (req: AuthRequest, res) => {
-  const schema = z.object({
-    type: z.string(),
-    name: z.string().max(16).optional(),
-  });
-  const { type, name } = schema.parse(req.body);
-  const conf = ANIMAL_TYPES[type];
-  if (!conf) return res.status(400).json({ error: 'Unknown animal type' });
+  const type = req.body.type || 'chicken';
+  const conf = TYPES[type];
+  if (!conf) return res.status(400).json({ error: 'สัตว์ไม่รู้จัก' });
 
   const farm = await prisma.farm.findUnique({ where: { userId: req.userId } });
   if (!farm) return res.status(404).json({ error: 'Farm not found' });
 
-  // จำกัดจำนวนสัตว์
   const count = await prisma.animal.count({ where: { farmId: farm.id } });
-  if (count >= 12) return res.status(400).json({ error: 'Farm animal limit reached (12)' });
+  if (count >= 8) return res.status(400).json({ error: 'คอกเต็มแล้ว (สูงสุด 8)' });
 
-  // เช็คเงิน
   const coin = await prisma.inventoryItem.findUnique({
     where: { userId_itemId: { userId: req.userId!, itemId: 'coin' } },
   });
-  if (!coin || coin.quantity < conf.buyPrice) {
-    return res.status(400).json({ error: 'Not enough coins' });
+  if (!coin || coin.quantity < conf.price) {
+    return res.status(400).json({ error: `ต้องการ ${conf.price} เหรียญ` });
   }
 
   await prisma.inventoryItem.update({
     where: { id: coin.id },
-    data: { quantity: { decrement: conf.buyPrice } },
+    data: { quantity: { decrement: conf.price } },
   });
 
   const animal = await prisma.animal.create({
     data: {
       farmId: farm.id,
       type,
-      name: name || `${type}-${count + 1}`,
-      posX: 200 + Math.random() * 300,
-      posY: 500 + Math.random() * 150,
+      name: conf.label,
+      posX: 180 + Math.random() * 200,
+      posY: 500 + Math.random() * 80,
       productReady: false,
       lastCollectedAt: new Date(),
     },
   });
 
-  res.json({ animal, cost: conf.buyPrice });
+  res.json({ animal, cost: conf.price });
 });
 
-// ให้อาหาร
-router.post('/feed/:id', async (req: AuthRequest, res) => {
-  const animal = await prisma.animal.findFirst({
-    where: { id: req.params.id, farm: { userId: req.userId } },
-  });
-  if (!animal) return res.status(404).json({ error: 'Animal not found' });
-
-  const conf = ANIMAL_TYPES[animal.type];
-  if (!conf) return res.status(400).json({ error: 'Invalid animal' });
-
-  const coin = await prisma.inventoryItem.findUnique({
-    where: { userId_itemId: { userId: req.userId!, itemId: 'coin' } },
-  });
-  if (!coin || coin.quantity < conf.feedCost) {
-    return res.status(400).json({ error: 'Not enough coins for feed' });
-  }
-
-  await prisma.inventoryItem.update({
-    where: { id: coin.id },
-    data: { quantity: { decrement: conf.feedCost } },
-  });
-
-  const updated = await prisma.animal.update({
-    where: { id: animal.id },
-    data: {
-      hunger: Math.max(0, animal.hunger - 40),
-      happiness: Math.min(100, animal.happiness + 15),
-      lastFedAt: new Date(),
-    },
-  });
-
-  res.json({ animal: updated });
-});
-
-// เก็บผลผลิต
 router.post('/collect/:id', async (req: AuthRequest, res) => {
   const animal = await prisma.animal.findFirst({
     where: { id: req.params.id, farm: { userId: req.userId } },
   });
-  if (!animal) return res.status(404).json({ error: 'Animal not found' });
-  if (!animal.productReady) return res.status(400).json({ error: 'Product not ready' });
+  if (!animal) return res.status(404).json({ error: 'ไม่พบสัตว์' });
+  if (!animal.productReady) return res.status(400).json({ error: 'ยังไม่พร้อมเก็บ' });
 
-  const conf = ANIMAL_TYPES[animal.type];
-  if (!conf) return res.status(400).json({ error: 'Invalid animal' });
-
-  const qty = 1 + Math.floor(Math.random() * 2);
-
+  const conf = TYPES[animal.type] || TYPES.chicken;
   await prisma.inventoryItem.upsert({
     where: { userId_itemId: { userId: req.userId!, itemId: conf.product } },
-    create: { userId: req.userId!, itemId: conf.product, quantity: qty },
-    update: { quantity: { increment: qty } },
+    create: { userId: req.userId!, itemId: conf.product, quantity: 1 },
+    update: { quantity: { increment: 1 } },
   });
 
-  const updated = await prisma.animal.update({
+  await prisma.animal.update({
     where: { id: animal.id },
-    data: {
-      productReady: false,
-      lastCollectedAt: new Date(),
-      happiness: Math.min(100, animal.happiness + 5),
-    },
+    data: { productReady: false, lastCollectedAt: new Date() },
   });
 
-  // exp
-  await prisma.character.update({
+  if (conf.product === 'egg') await bumpQuest(req.userId!, 'collect_egg');
+
+  res.json({ ok: true, product: conf.product, quantity: 1 });
+});
+
+// รีเซ็ต product พร้อมทุก 60 วิ (เรียกตอน get ก็ได้)
+router.post('/tick', async (req: AuthRequest, res) => {
+  const farm = await prisma.farm.findUnique({
     where: { userId: req.userId },
-    data: { experience: { increment: 8 } },
+    include: { animals: true },
   });
+  if (!farm) return res.status(404).json({ error: 'Farm not found' });
 
-  res.json({ animal: updated, collected: { itemId: conf.product, quantity: qty } });
+  const now = Date.now();
+  for (const a of farm.animals) {
+    if (a.productReady) continue;
+    const last = a.lastCollectedAt ? new Date(a.lastCollectedAt).getTime() : 0;
+    if (now - last > 60_000) {
+      await prisma.animal.update({ where: { id: a.id }, data: { productReady: true } });
+      a.productReady = true;
+    }
+  }
+  res.json({ animals: farm.animals });
 });
 
 export default router;

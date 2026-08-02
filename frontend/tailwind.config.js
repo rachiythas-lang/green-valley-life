@@ -4,30 +4,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#8FD694',
-          500: '#4DAA57',
-          600: '#72B16E',
-          700: '#3d8b47',
-          800: '#166534',
-          900: '#14532d',
+        pixel: {
+          green: '#7CB342',
+          dark: '#33691E',
+          grass: '#8BC34A',
+          sky: '#81D4FA',
+          wood: '#8D6E63',
+          woodDark: '#5D4037',
+          cream: '#FFF8E1',
+          pink: '#F48FB1',
+          gold: '#FFD54F',
+          coin: '#FFB300',
         },
-        accent: '#CBEF43',
-        sky: '#87CEEB',
-        cream: '#F8F7F3',
       },
       fontFamily: {
-        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        pixel: ['"Press Start 2P"', 'monospace'],
+        cute: ['"Nunito"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        glass: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
-      },
-      backdropBlur: {
-        glass: '12px',
+        pixel: '4px 4px 0 #33691E',
+        pixelSm: '2px 2px 0 #5D4037',
       },
     },
   },

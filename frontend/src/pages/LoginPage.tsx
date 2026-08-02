@@ -1,106 +1,153 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuthStore } from '../stores/authStore';
 
+type Mode = 'login' | 'register' | 'guest';
+
 export default function LoginPage() {
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<Mode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
-  const loginGuest = useAuthStore((s) => s.loginGuest);
+  const [info, setInfo] = useState('');
+  const { login, register, loginGuest, loading } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleGuest = async () => {
-    setLoading(true);
+  const goGame = (data?: any) => {
+    if (data?.morningBonus) {
+      sessionStorage.setItem('gvl-morning-msg', data.morningBonus.message);
+    }
+    navigate('/game');
+  };
+
+  const submit = async () => {
     setError('');
+    setInfo('');
     try {
-      await loginGuest(name || undefined);
-      navigate('/character');
+      if (mode === 'login') {
+        const data = await login(email, password);
+        if (data?.isMorning) setInfo('สวัสดีตอนเช้า! บันทึกการเข้าใช้งานแล้ว ☀️');
+        goGame(data);
+      } else if (mode === 'register') {
+        await register(email, password, displayName);
+        goGame();
+      } else {
+        await loginGuest(displayName || undefined);
+        goGame();
+      }
     } catch (e: any) {
-      setError(e.response?.data?.error || 'เข้าสู่ระบบไม่สำเร็จ');
-    } finally {
-      setLoading(false);
+      setError(e.response?.data?.error || 'เกิดข้อผิดพลาด');
     }
   };
 
   return (
-    <div className="min-h-full w-full flex items-center justify-center bg-gradient-to-br from-primary-100 via-sky/50 to-accent/40 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-10 left-10 w-40 h-40 bg-primary-300/40 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-60 h-60 bg-sky/30 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-accent/20 rounded-full blur-2xl" />
+    <div
+      className="min-h-full w-full flex flex-col items-center justify-center relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, #81D4FA 0%, #81D4FA 35%, #8BC34A 35%, #8BC34A 100%)',
+        imageRendering: 'pixelated',
+      }}
+    >
+      {/* เมฆพิกเซล */}
+      <div className="absolute top-8 left-10 w-20 h-10 bg-white/80 rounded-sm" style={{ boxShadow: '16px 4px 0 white, 32px 0 0 white' }} />
+      <div className="absolute top-16 right-16 w-16 h-8 bg-white/70 rounded-sm" />
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="glass rounded-3xl p-8 md:p-10 w-[90%] max-w-md z-10"
-      >
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200 }}
-            className="text-6xl mb-3"
-          >
-            🌱
-          </motion.div>
-          <h1 className="text-3xl font-extrabold text-primary-800 tracking-tight">
-            Green Valley Life
+      {/* ต้นไม้ซ้ายขวา */}
+      <div className="absolute bottom-32 left-6 text-6xl opacity-90">🌳</div>
+      <div className="absolute bottom-28 right-8 text-5xl opacity-90">🌸</div>
+      <div className="absolute bottom-40 left-24 text-4xl">🌻</div>
+
+      <div className="panel-cream p-6 w-[92%] max-w-sm z-10 relative">
+        <div className="text-center mb-5">
+          <div className="text-5xl mb-2">🏡</div>
+          <h1 className="text-pixel-title text-[13px] leading-relaxed text-pixel-dark">
+            GREEN VALLEY
           </h1>
-          <p className="text-primary-600 mt-2 font-medium">
-            ชีวิตในหุบเขาเขียวขจี • Cozy Farming Multiplayer
+          <p className="font-cute font-bold text-pixel-woodDark text-sm mt-2">
+            สร้างหมู่บ้านของคุณ!
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-primary-700 mb-1.5">
-              ชื่อของคุณ (ไม่บังคับ)
-            </label>
+        {/* แท็บ */}
+        <div className="flex gap-1 mb-4">
+          {([
+            ['login', 'เข้าสู่ระบบ'],
+            ['register', 'สมัคร'],
+            ['guest', 'Guest'],
+          ] as const).map(([m, label]) => (
+            <button
+              key={m}
+              onClick={() => { setMode(m); setError(''); }}
+              className={`flex-1 py-2 text-xs font-cute font-bold border-2 border-pixel-woodDark ${
+                mode === m ? 'bg-pixel-green text-white' : 'bg-white text-pixel-woodDark'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="space-y-3">
+          {(mode === 'register' || mode === 'guest') && (
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="เช่น ชาวนาตัวน้อย"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="ชื่อในเกม"
               maxLength={16}
-              className="w-full px-4 py-3 rounded-2xl border border-primary-200 bg-white/80 focus:outline-none focus:ring-2 focus:ring-primary-400 text-primary-900 placeholder:text-primary-300"
+              className="w-full px-3 py-2.5 border-2 border-pixel-woodDark font-cute font-bold text-sm outline-none focus:bg-yellow-50"
             />
-          </div>
+          )}
+          {(mode === 'login' || mode === 'register') && (
+            <>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="อีเมล"
+                className="w-full px-3 py-2.5 border-2 border-pixel-woodDark font-cute font-bold text-sm outline-none focus:bg-yellow-50"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)"
+                className="w-full px-3 py-2.5 border-2 border-pixel-woodDark font-cute font-bold text-sm outline-none focus:bg-yellow-50"
+              />
+            </>
+          )}
 
           {error && (
-            <p className="text-red-500 text-sm text-center font-medium">{error}</p>
+            <p className="text-red-600 text-xs font-cute font-bold text-center bg-red-50 border-2 border-red-300 py-1">
+              {error}
+            </p>
+          )}
+          {info && (
+            <p className="text-pixel-dark text-xs font-cute font-bold text-center bg-yellow-100 border-2 border-pixel-gold py-1">
+              {info}
+            </p>
           )}
 
           <button
-            onClick={handleGuest}
+            onClick={submit}
             disabled={loading}
-            className="btn-primary w-full text-lg disabled:opacity-60"
+            className="btn-pixel-green w-full py-3 text-sm disabled:opacity-60"
           >
-            {loading ? 'กำลังเข้าสู่ระบบ...' : 'เล่นเลย (Guest)'}
-          </button>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-primary-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white/70 text-primary-500">หรือ</span>
-            </div>
-          </div>
-
-          <button
-            disabled
-            className="btn-secondary w-full opacity-60 cursor-not-allowed"
-          >
-            เข้าสู่ระบบด้วย Google (เร็ว ๆ นี้)
+            {loading ? '...' : mode === 'login' ? 'เข้าเล่น 🌱' : mode === 'register' ? 'สมัคร & เล่น' : 'เล่นเลย (Guest)'}
           </button>
         </div>
 
-        <p className="text-center text-xs text-primary-500 mt-6">
-          เวอร์ชัน MVP • รองรับผู้เล่นพร้อมกัน ~20 คน
+        <p className="text-[10px] text-center text-pixel-woodDark/70 font-cute mt-4 leading-relaxed">
+          เข้าใช้ตอนเช้า (05:00–12:00) ได้โบนัส + บันทึกลงชีต
         </p>
-      </motion.div>
+      </div>
+
+      {/* ป้ายไม้ล่าง */}
+      <div className="panel-wood mt-4 px-6 py-2 z-10">
+        <p className="font-cute font-extrabold text-white text-sm tracking-wide">
+          ⭐ Pixel Cozy Farm ⭐
+        </p>
+      </div>
     </div>
   );
 }
