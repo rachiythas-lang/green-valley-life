@@ -1,36 +1,32 @@
-# 🌱 Green Valley Life v1.3 — Village
+# 🌱 Green Valley Life v1.4 — รันง่าย
 
-พิกเซล · น่ารัก · หมู่บ้านมีชีวิต · น่ากลับมาเล่นทุกวัน
+**ไม่ต้อง Docker / PostgreSQL / Prisma**  
+Backend เป็น Node ล้วน เก็บข้อมูลในไฟล์ `backend/data/db.json`
 
-## ของใหม่ใน v1.3 (ครบ 9 ข้อ)
+## รัน (2 เทอร์มินัล)
 
-### น่ากลับมาเล่นทุกวัน
-1. **🎁 Daily Reward** — ปฏิทิน 7 วัน (เหรียญ / เมล็ด / เฟอร์นิเจอร์)
-2. **📜 เควสบนจอ** + NPC มิ้นท์ / ลุงปลา พูดสั้น ๆ
-3. **🐾 สัตว์ในโลก** — ไก่เดินในคอก คลิกเก็บไข่
-
-### ดูเป็นหมู่บ้าน
-4. **🪑 แต่งบ้าน** — วางม้านั่ง รั้ว ดอกไม้ โคม น้ำพุ
-5. **🗺️ โซนแมพ** — ฟาร์ม / บ้าน / น้ำ / คอก
-6. **🌤️ สภาพอากาศ + เวลาวัน** — แดด เมฆ ฝน เช้า–คืน
-
-### ลึกขึ้น
-7. **🏪 ร้านมิ้นท์** — ซื้อเมล็ด ของแต่ง ขายพืช/ไข่/ปลา
-8. **🎣 ตกปลา** — คลิกบ่อน้ำ (ใช้พลังงาน 5)
-9. **🤝 เพื่อน** — เพิ่มเพื่อน + เยี่ยมฟาร์ม (ดูอย่างเดียว)
-
-## รัน
+### 1) Backend
 ```bash
-docker run --name gvl-postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=green_valley_life -p 5432:5432 -d postgres:16
-cd backend && npm install && npx prisma generate && npx prisma db push && npm run dev
-cd frontend && npm install && npm run dev
+cd green-valley-life/backend
+node src/server.js
 ```
-http://localhost:5173
+ต้องเห็น: `GVL API ready http://localhost:3001`
 
-**หมายเหตุ:** หลังอัปเดต schema ต้อง `npx prisma db push` ใหม่
+### 2) Frontend
+```bash
+cd green-valley-life/frontend
+npm install
+npm run dev
+```
+เปิด http://localhost:5173 → กด **Guest** หรือสมัคร
 
-## วิธีเล่นสั้น ๆ
-- 🎁 รับของขวัญรายวันจากปุ่มซ้าย
-- ไถ → ปลูก → รดน้ำ → เก็บ (เห็น ! )
-- คลิกไก่เก็บไข่ · คลิกบ่อตกปลา · คลิก NPC
-- ร้านขายของ · แต่งบ้าน · เพิ่มเพื่อน
+## ถ้าเข้าเกมไม่ได้
+1. เปิด http://localhost:3001/health ต้องขึ้น `{"status":"ok"}`
+2. ถ้าไม่ขึ้น = backend ยังไม่รัน
+3. หน้าเกมขึ้น error = กด "ลองใหม่" หลัง backend พร้อม
+4. ล้าง cache: DevTools → Application → Local Storage → ลบ `gvl-auth`
+
+## ระบบที่มี
+- ล็อกอิน Email / Guest
+- ฟาร์ม ไถ ปลูก รดน้ำ เก็บ
+- ไก่ / ตกปลา / ร้าน / ของขวัญรายวัน / แต่งบ้าน / เควส / เพื่อน

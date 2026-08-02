@@ -1,0 +1,333 @@
+{
+  "users": [
+    {
+      "id": "msc0tuabpnholi",
+      "email": "rachiytahs@gmail.com",
+      "passwordHash": "acba58a2bdb922249f8092cfbc46bbe80342b24b99f3aead0dde10cf6c8eb166",
+      "displayName": "Admin",
+      "provider": "email",
+      "role": "admin",
+      "isBanned": false,
+      "loginStreak": 1,
+      "dailyClaimDay": 0,
+      "lastDailyClaim": null,
+      "lastLoginAt": "2026-08-02T16:35:01.907Z",
+      "character": {
+        "name": "Admin",
+        "gender": "male",
+        "level": 1,
+        "experience": 0,
+        "energy": 100,
+        "maxEnergy": 100,
+        "hairColor": "#4A3728",
+        "skinTone": "#F5D0C5"
+      },
+      "farm": {
+        "id": "msc0tuabrcepzm",
+        "name": "Admin's Farm",
+        "level": 1,
+        "weather": "sunny",
+        "timeOfDay": "morning"
+      }
+    }
+  ],
+  "plots": [
+    {
+      "id": "msc0tuaci2m3et",
+      "farmId": "msc0tuabrcepzm",
+      "x": 0,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuac8fz753",
+      "farmId": "msc0tuabrcepzm",
+      "x": 0,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuacc67git",
+      "farmId": "msc0tuabrcepzm",
+      "x": 0,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuach2r8mf",
+      "farmId": "msc0tuabrcepzm",
+      "x": 0,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuacnizyzm",
+      "farmId": "msc0tuabrcepzm",
+      "x": 1,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadhcmsdf",
+      "farmId": "msc0tuabrcepzm",
+      "x": 1,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuado1cal4",
+      "farmId": "msc0tuabrcepzm",
+      "x": 1,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadyzwe9h",
+      "farmId": "msc0tuabrcepzm",
+      "x": 1,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadj3tm6d",
+      "farmId": "msc0tuabrcepzm",
+      "x": 2,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad2jj3h7",
+      "farmId": "msc0tuabrcepzm",
+      "x": 2,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad6w997o",
+      "farmId": "msc0tuabrcepzm",
+      "x": 2,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadcuyq0t",
+      "farmId": "msc0tuabrcepzm",
+      "x": 2,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad6a47z6",
+      "farmId": "msc0tuabrcepzm",
+      "x": 3,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuady34gmj",
+      "farmId": "msc0tuabrcepzm",
+      "x": 3,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad3yeybp",
+      "farmId": "msc0tuabrcepzm",
+      "x": 3,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadzuvaih",
+      "farmId": "msc0tuabrcepzm",
+      "x": 3,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadin6gyn",
+      "farmId": "msc0tuabrcepzm",
+      "x": 4,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad4vvaqq",
+      "farmId": "msc0tuabrcepzm",
+      "x": 4,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad0sm3cp",
+      "farmId": "msc0tuabrcepzm",
+      "x": 4,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuad3djjif",
+      "farmId": "msc0tuabrcepzm",
+      "x": 4,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadyfbzr1",
+      "farmId": "msc0tuabrcepzm",
+      "x": 5,
+      "y": 0,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadfmwxj4",
+      "farmId": "msc0tuabrcepzm",
+      "x": 5,
+      "y": 1,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadzn1pch",
+      "farmId": "msc0tuabrcepzm",
+      "x": 5,
+      "y": 2,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    },
+    {
+      "id": "msc0tuadwigp6w",
+      "farmId": "msc0tuabrcepzm",
+      "x": 5,
+      "y": 3,
+      "state": "empty",
+      "cropType": null,
+      "plantedAt": null,
+      "wateredAt": null,
+      "growthStage": 0
+    }
+  ],
+  "animals": [
+    {
+      "id": "msc0tuadvvh6al",
+      "farmId": "msc0tuabrcepzm",
+      "type": "chicken",
+      "name": "เจี๊ยบ",
+      "posX": 220,
+      "posY": 540,
+      "productReady": true,
+      "lastCollectedAt": null
+    }
+  ],
+  "inventory": [
+    {
+      "id": "msc0tuad904mn4",
+      "userId": "msc0tuabpnholi",
+      "itemId": "coin",
+      "quantity": 10000
+    },
+    {
+      "id": "msc0tuadse6o1h",
+      "userId": "msc0tuabpnholi",
+      "itemId": "seed_tomato",
+      "quantity": 10
+    },
+    {
+      "id": "msc0tuad5dgfin",
+      "userId": "msc0tuabpnholi",
+      "itemId": "seed_carrot",
+      "quantity": 10
+    }
+  ],
+  "decorations": []
+}

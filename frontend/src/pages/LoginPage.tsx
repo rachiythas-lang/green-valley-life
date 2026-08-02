@@ -18,6 +18,10 @@ export default function LoginPage() {
     if (data?.morningBonus) {
       sessionStorage.setItem('gvl-morning-msg', data.morningBonus.message);
     }
+    if (data?.user?.role === 'admin') {
+      navigate('/admin');
+      return;
+    }
     navigate('/game');
   };
 

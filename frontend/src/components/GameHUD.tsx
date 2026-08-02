@@ -75,6 +75,13 @@ export default function GameHUD({
 
   return (
     <div className="absolute inset-0 pointer-events-none z-20">
+      
+      {user?.role === 'admin' && (
+        <a href="/admin" className="absolute top-14 right-2 pointer-events-auto panel-cream px-2 py-1 text-[10px] font-cute font-extrabold border-2 border-pixel-woodDark">
+          🛠️ แอดมิน
+        </a>
+      )}
+
       {/* Top HUD */}
       <div className="absolute top-2 left-2 right-2 flex justify-between items-start pointer-events-auto">
         <div className="flex items-center gap-2 hud-bar pl-1 pr-3 py-1">
@@ -133,6 +140,7 @@ export default function GameHUD({
           { id: 'animal', icon: '🐾', label: 'สัตว์' },
           { id: 'decor', icon: '🪑', label: 'แต่ง' },
           { id: 'friends', icon: '🤝', label: 'เพื่อน' },
+          // admin handled below
         ].map((b) => (
           <button
             key={b.id}

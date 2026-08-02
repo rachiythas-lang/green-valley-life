@@ -3,6 +3,7 @@ import { useAuthStore } from './stores/authStore';
 import { useEffect } from 'react';
 import LoginPage from './pages/LoginPage';
 import GamePage from './pages/GamePage';
+import AdminPage from './pages/AdminPage';
 
 function Guard({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token);
@@ -45,6 +46,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/game" replace /> : <LoginPage />} />
       <Route path="/game" element={<Guard><GamePage /></Guard>} />
+      <Route path="/admin" element={<Guard><AdminPage /></Guard>} />
       <Route path="*" element={<Navigate to={token ? '/game' : '/login'} replace />} />
     </Routes>
   );
