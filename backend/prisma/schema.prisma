@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  displayName   String
+  avatarUrl     String?
+  provider      String    @default("email") // email, google, guest, apple
+  firebaseUid   String?   @unique
+  role          String    @default("player") // player, admin, moderator
+  isBanned      Boolean   @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  character     Character?
+  inventory     InventoryItem[]
+  quests        UserQuest[]
+  friends       Friendship[] @relation("UserFriends")
+  friendOf      Friendship[] @relation("FriendOf")
+  farm          Farm?
+  transactions  Transaction[]
+  chatMessages  ChatMessage[]
+
+  @@index([email])
+  @@index([firebaseUid])
+}
+
+model Character {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  gender        String   // male, female
+  hairStyle     Int      @default(0)
+  hairColor     String   @default("#4A3728")
+  eyeStyle      Int      @default(0)
+  eyeColor      String   @default("#2E5A1C")
+  skinTone      String   @default("#F5D0C5")
+  outfitTop     Int      @default(0)
+  outfitBottom  Int      @default(0)
+  shoes         Int      @default(0)
+  hat           Int      @default(-1)
+  accessory     Int      @default(-1)
+
+  level         Int      @default(1)
+  experience    Int      @default(0)
+  energy        Int      @default(100)
+  maxEnergy     Int      @default(100)
+
+  posX          Float    @default(0)
+  posY          Float    @default(0)
+  currentMap    String   @default("farm")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Farm {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String   @default("My Farm")
+  level         Int      @default(1)
+  size          Int      @default(1) // ขยายทีหลัง
+  weather       String   @default("sunny")
+  timeOfDay     String   @default("morning") // morning, afternoon, evening, night
+
+  plots         FarmPlot[]
+  animals       Animal[]
+  decorations   Decoration[]
+  house         House?
+
+  lastSavedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FarmPlot {
+  id            String   @id @default(cuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  x             Int
+  y             Int
+  state         String   @default("empty") // empty, tilled, planted, growing, ready, dead
+  cropType      String?  // tomato, carrot, wheat, etc.
+  plantedAt     DateTime?
+  wateredAt     DateTime?
+  growthStage   Int      @default(0)
+  quality       String   @default("common") // common, rare, epic, legendary
+  fertilized    Boolean  @default(false)
+
+  @@unique([farmId, x, y])
+  @@index([farmId])
+}
+
+model Animal {
+  id            String   @id @default(cuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  type          String   // chicken, cow, pig, sheep, duck, goat, rabbit
+  name          String?
+  level         Int      @default(1)
+  happiness     Int      @default(80)
+  hunger        Int      @default(50)
+  health        Int      @default(100)
+  posX          Float    @default(0)
+  posY          Float    @default(0)
+  lastFedAt     DateTime?
+  lastCollectedAt DateTime?
+  productReady  Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([farmId])
+}
+
+model House {
+  id            String   @id @default(cuid())
+  farmId        String   @unique
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  level         Int      @default(1)
+  wallStyle     String   @default("wood")
+  floorStyle    String   @default("wood")
+  roofStyle     String   @default("red")
+  wallpaper     String   @default("default")
+
+  furniture     FurniturePlacement[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FurniturePlacement {
+  id            String   @id @default(cuid())
+  houseId       String
+  house         House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+
+  furnitureId   String   // อ้างอิง catalog
+  x             Float
+  y             Float
+  rotation      Int      @default(0)
+  layer         Int      @default(0)
+
+  @@index([houseId])
+}
+
+model Decoration {
+  id            String   @id @default(cuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  itemId        String
+  x             Float
+  y             Float
+  rotation      Int      @default(0)
+
+  @@index([farmId])
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemId        String   // seed_tomato, wood, egg, etc.
+  quantity      Int      @default(1)
+  metadata      Json?    // quality, durability ฯลฯ
+
+  @@unique([userId, itemId])
+  @@index([userId])
+}
+
+model ItemCatalog {
+  id            String   @id // seed_tomato, furniture_chair_01
+  nameTh        String
+  nameEn        String
+  category      String   // seed, crop, tool, furniture, animal_product, material, consumable
+  descriptionTh String?
+  descriptionEn String?
+  stackable     Boolean  @default(true)
+  maxStack      Int      @default(999)
+  sellPrice     Int      @default(0)
+  buyPrice      Int      @default(0)
+  rarity        String   @default("common")
+  icon          String?
+  data          Json?    // growthTime, energyCost, etc.
+}
+
+model Quest {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  type          String   // daily, weekly, main, achievement
+  titleTh       String
+  titleEn       String
+  descriptionTh String
+  descriptionEn String
+  requirements  Json     // { "plant_crop": 5, "harvest": 3 }
+  rewards       Json     // { "coin": 100, "exp": 50, "items": [...] }
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+}
+
+model UserQuest {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId       String
+  quest         Quest    @relation(fields: [questId], references: [id])
+
+  progress      Json     @default("{}")
+  status        String   @default("active") // active, completed, claimed
+  completedAt   DateTime?
+  claimedAt     DateTime?
+
+  @@unique([userId, questId])
+  @@index([userId])
+}
+
+model Friendship {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friendId      String
+  friend        User     @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  status        String   @default("pending") // pending, accepted, blocked
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, friendId])
+}
+
+model ChatMessage {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId        String   // global, farm:{farmId}, party:{id}
+  content       String
+  type          String   @default("text") // text, emoji, system
+  createdAt     DateTime @default(now())
+
+  @@index([roomId, createdAt])
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // earn, spend, purchase, gift
+  currency      String   // coin, diamond
+  amount        Int
+  description   String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+model GameConfig {
+  key           String   @id
+  value         Json
+  updatedAt     DateTime @updatedAt
+}
